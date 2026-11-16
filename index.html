@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07030f">
+  <title>GUMA Portal - Civitas Matematika IPB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+  <div class="grid-overlay" aria-hidden="true"></div>
+
+  <!-- ================= LOGIN / DAFTAR ================= -->
+  <main id="authScreen" class="auth-screen hidden">
+    <section class="auth-hero">
+      <div class="brand-icon big">G</div>
+      <span class="eyebrow"><span class="dot"></span> Portal Civitas Prodi Matematika</span>
+      <h1>Satu pintu digital untuk <span class="glow-text">civitas Matematika</span></h1>
+      <p>Akses katalog materi, arsip ujian, dan fitur komunitas Gumatika sesuai tingkatan akun Anda.</p>
+      <div class="eq-ticker" id="eqTicker" aria-hidden="true"></div>
+      <div class="role-legend">
+        <span class="role-badge role-mahasiswa">Mahasiswa</span>
+        <span class="role-badge role-civimat">CiviMat</span>
+        <span class="role-badge role-guma">Member Guma</span>
+        <span class="role-badge role-admin">Admin</span>
+      </div>
+    </section>
+
+    <section class="auth-card">
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" data-tab="login" type="button">Masuk</button>
+        <button class="auth-tab" data-tab="register" type="button">Daftar</button>
+      </div>
+      <div id="authError" class="auth-error" role="alert"></div>
+
+      <form id="loginForm" autocomplete="on">
+        <h2>Selamat datang kembali</h2>
+        <p class="sub">Masuk untuk melanjutkan ke portal.</p>
+        <div class="field"><label for="loginUser">Username</label><input class="input" id="loginUser" autocomplete="username" required placeholder="username"></div>
+        <div class="field"><label for="loginPass">Kata sandi</label>
+          <div class="pw-wrap"><input class="input" id="loginPass" type="password" autocomplete="current-password" required placeholder="••••••••"><button class="pw-toggle" type="button">LIHAT</button></div>
+        </div>
+        <div class="field"><label class="check" style="text-transform:none;letter-spacing:0;font-weight:500"><input type="checkbox" id="loginRemember"> Ingat saya di perangkat ini</label></div>
+        <button class="btn btn-primary btn-block" type="submit">Masuk</button>
+        <p class="auth-foot">Belum punya akun? Pilih tab <strong>Daftar</strong> (akun baru berperan Mahasiswa).</p>
+      </form>
+
+      <form id="registerForm" class="hidden" autocomplete="off">
+        <h2>Buat akun baru</h2>
+        <p class="sub">Akun baru otomatis bertingkat <strong>Mahasiswa</strong>. Tingkatan lain diatur admin.</p>
+        <div class="field"><label for="regName">Nama lengkap</label><input class="input" id="regName" required></div>
+        <div class="form-grid">
+          <div class="field"><label for="regUser">Username</label><input class="input" id="regUser" required placeholder="huruf kecil/angka"></div>
+          <div class="field"><label for="regNim">NIM (opsional)</label><input class="input" id="regNim"></div>
+        </div>
+        <div class="field"><label for="regPass">Kata sandi</label>
+          <div class="pw-wrap"><input class="input" id="regPass" type="password" autocomplete="new-password" required placeholder="min. 8 karakter, huruf + angka"><button class="pw-toggle" type="button">LIHAT</button></div>
+        </div>
+        <div class="field"><label for="regPass2">Ulangi kata sandi</label><input class="input" id="regPass2" type="password" autocomplete="new-password" required></div>
+        <button class="btn btn-primary btn-block" type="submit">Daftar</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- ================= APLIKASI (setelah login) ================= -->
+  <div id="appShell" class="app-shell hidden">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <button class="btn btn-sm menu-btn" id="menuBtn" type="button" aria-label="Menu">☰</button>
+        <a class="brand" href="#/home">
+          <div class="brand-icon">G</div>
+          <div class="brand-text"><h1>GUMA PORTAL</h1><p>Civitas Matematika IPB</p></div>
+        </a>
+      </div>
+      <div class="top-right">
+        <div class="user-chip" data-route="profile" title="Profil saya">
+          <div class="avatar" id="userAvatar">U</div>
+          <div class="user-meta"><strong id="userName">-</strong><span id="userRole">-</span></div>
+        </div>
+        <button class="btn btn-sm" id="logoutBtn" type="button">Keluar ⏻</button>
+      </div>
+    </header>
+    <nav class="sidebar" id="sidebar" aria-label="Navigasi utama"></nav>
+    <main class="content" id="view"></main>
+  </div>
+
+  <div id="bootMsg" class="hidden" style="position:relative;z-index:2;min-height:100vh;display:flex;align-items:center;justify-content:center;color:#b6a9d9;font-weight:600">Memuat portal…</div>
+  <div id="modalRoot" class="modal-backdrop"></div>
+  <div id="toasts" aria-live="polite"></div>
+
+  <footer class="site-foot">&copy; 2026 Gugus Mahasiswa Matematika (GUMATIKA) - FMIPA IPB University.</footer>
+
+  <script src="js/bg.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/gumateri.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
