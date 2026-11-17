@@ -18,16 +18,8 @@
   <main id="authScreen" class="auth-screen hidden">
     <section class="auth-hero">
       <div class="brand-icon big">G</div>
-      <span class="eyebrow"><span class="dot"></span> Portal Civitas Prodi Matematika</span>
-      <h1>Satu pintu digital untuk <span class="glow-text">civitas Matematika</span></h1>
-      <p>Akses katalog materi, arsip ujian, dan fitur komunitas Gumatika sesuai tingkatan akun Anda.</p>
+      <h1><span class="glow-text">GUMA Portal</span></h1>
       <div class="eq-ticker" id="eqTicker" aria-hidden="true"></div>
-      <div class="role-legend">
-        <span class="role-badge role-mahasiswa">Mahasiswa</span>
-        <span class="role-badge role-civimat">CiviMat</span>
-        <span class="role-badge role-guma">Member Guma</span>
-        <span class="role-badge role-admin">Admin</span>
-      </div>
     </section>
 
     <section class="auth-card">
@@ -38,27 +30,22 @@
       <div id="authError" class="auth-error" role="alert"></div>
 
       <form id="loginForm" autocomplete="on">
-        <h2>Selamat datang kembali</h2>
-        <p class="sub">Masuk untuk melanjutkan ke portal.</p>
         <div class="field"><label for="loginUser">Username</label><input class="input" id="loginUser" autocomplete="username" required placeholder="username"></div>
         <div class="field"><label for="loginPass">Kata sandi</label>
           <div class="pw-wrap"><input class="input" id="loginPass" type="password" autocomplete="current-password" required placeholder="••••••••"><button class="pw-toggle" type="button">LIHAT</button></div>
         </div>
         <div class="field"><label class="check" style="text-transform:none;letter-spacing:0;font-weight:500"><input type="checkbox" id="loginRemember"> Ingat saya di perangkat ini</label></div>
         <button class="btn btn-primary btn-block" type="submit">Masuk</button>
-        <p class="auth-foot">Belum punya akun? Pilih tab <strong>Daftar</strong> (akun baru berperan Mahasiswa).</p>
       </form>
 
       <form id="registerForm" class="hidden" autocomplete="off">
-        <h2>Buat akun baru</h2>
-        <p class="sub">Akun baru otomatis bertingkat <strong>Mahasiswa</strong>. Tingkatan lain diatur admin.</p>
         <div class="field"><label for="regName">Nama lengkap</label><input class="input" id="regName" required></div>
         <div class="form-grid">
-          <div class="field"><label for="regUser">Username</label><input class="input" id="regUser" required placeholder="huruf kecil/angka"></div>
+          <div class="field"><label for="regUser">Username</label><input class="input" id="regUser" required ></div>
           <div class="field"><label for="regNim">NIM (opsional)</label><input class="input" id="regNim"></div>
         </div>
         <div class="field"><label for="regPass">Kata sandi</label>
-          <div class="pw-wrap"><input class="input" id="regPass" type="password" autocomplete="new-password" required placeholder="min. 8 karakter, huruf + angka"><button class="pw-toggle" type="button">LIHAT</button></div>
+          <div class="pw-wrap"><input class="input" id="regPass" type="password" autocomplete="new-password" required placeholder="min. 8 karakter"><button class="pw-toggle" type="button">LIHAT</button></div>
         </div>
         <div class="field"><label for="regPass2">Ulangi kata sandi</label><input class="input" id="regPass2" type="password" autocomplete="new-password" required></div>
         <button class="btn btn-primary btn-block" type="submit">Daftar</button>
@@ -96,8 +83,11 @@
 
   <script src="js/bg.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/local-extra.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/gumateri.js"></script>
+  <script src="js/forum.js"></script>
+  <script src="js/peminjaman.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

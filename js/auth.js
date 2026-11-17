@@ -2,16 +2,19 @@
    AUTH CLIENT
    ---------------------------------------------------------
    Dua mode dengan antarmuka identik:
-   - REMOTE : GUMA_CONFIG.API_URL terisi -> memanggil backend Apps Script
-              (backend/Auth.gs). Inilah mode yang aman untuk dipakai bersama.
-   - LOKAL  : API_URL kosong -> "server tiruan" di browser (localStorage).
+   - REMOTE : SUPABASE_URL + SUPABASE_ANON_KEY terisi -> memanggil fungsi guma_api()
+              di database Supabase (backend/database.sql). Mode untuk dipakai bersama.
+   - LOKAL  : kosong -> "server tiruan" di browser (localStorage).
               Hanya untuk demo/pengembangan, TIDAK aman.
    Semua keputusan hak akses yang sebenarnya dibuat oleh server; sisi klien
    hanya menyembunyikan tampilan.
    ========================================================= */
 const Auth = (() => {
-  const API_URL = (window.GUMA_CONFIG && window.GUMA_CONFIG.API_URL || '').trim();
-  const REMOTE = !!API_URL;
+  const CFG = window.GUMA_CONFIG || {};
+  const SB_URL = String(CFG.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const SB_KEY = String(CFG.SUPABASE_ANON_KEY || '').trim();
+  const SCRIPT_URL = String(CFG.APPS_SCRIPT_URL || '').trim();
+  const REMOTE = !!(SB_URL && SB_KEY);
   const TOKEN_KEY = 'guma.token.v1';
 
   const ROLES = {
@@ -35,15 +38,36 @@ const Auth = (() => {
   };
 
   /* ---------- Transport ---------- */
+  const NET_ERR = { ok: false, error: 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.', code: 'NETWORK' };
+
   async function rpc(action, data) {
-    const body = { action, token: tokenStore.get(), data: data || {} };
-    if (!REMOTE) return LocalServer.handle(body);
+    const token = tokenStore.get();
+    if (!REMOTE) return LocalServer.handle({ action, token, data: data || {} });
     try {
-      // text/plain menghindari preflight CORS (Apps Script tidak mendukung OPTIONS)
-      const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), redirect: 'follow' });
+      const res = await fetch(SB_URL + '/rest/v1/rpc/guma_api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY },
+        body: JSON.stringify({ p_action: action, p_token: token || null, p_data: data || {} })
+      });
+      if (!res.ok) return { ok: false, error: 'Server database sedang bermasalah (' + res.status + '). Coba lagi sebentar.', code: 'NETWORK' };
       return await res.json();
     } catch (e) {
-      return { ok: false, error: 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.', code: 'NETWORK' };
+      return NET_ERR;
+    }
+  }
+
+  // Memanggil Apps Script (Deep Search / Sinkronisasi Drive). Token sesi dikirim agar Apps Script
+  // bisa memverifikasinya ke database. text/plain menghindari preflight CORS.
+  async function callScript(action, data) {
+    if (!SCRIPT_URL) return { success: false, error: 'APPS_SCRIPT_URL belum diisi di js/config.js.', code: 'NOCONFIG' };
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
+        body: JSON.stringify({ action, token: tokenStore.get(), data: data || {} })
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, error: NET_ERR.error, code: 'NETWORK' };
     }
   }
 
@@ -112,17 +136,17 @@ const Auth = (() => {
     return r;
   }
 
-  /* ----- Data yang dijaga server ----- */
-  const fetchCatalog = () => rpc('catalog');
+  const SCRIPT_READY = !!SCRIPT_URL;
 
   return { REMOTE, ROLES, ROLE_KEYS, CONFIGURABLE_ROLES, configure, init, refresh, login, register, logout, changePassword, current,
-           getAccessMatrix, canAccess, adminList, adminCreateUser, adminUpdate, adminResetPassword, adminDelete, setAccess, fetchCatalog };
+           getAccessMatrix, canAccess, adminList, adminCreateUser, adminUpdate, adminResetPassword, adminDelete, setAccess, callScript, SCRIPT_READY,
+           api: rpc };   // pemanggil generik untuk fitur lain (Forum, Peminjaman)
 })();
 
 
 /* =========================================================
    SERVER TIRUAN LOKAL (hanya untuk mode demo tanpa backend)
-   Meniru perilaku backend/Auth.gs, data di localStorage.
+   Meniru perilaku backend/database.sql, data di localStorage.
    ========================================================= */
 const LocalServer = (() => {
   const K = { users: 'guma.users.v1', sessions: 'guma.sessions.v2', access: 'guma.access.v1', lock: 'guma.lock.v1' };
@@ -204,8 +228,9 @@ const LocalServer = (() => {
         const u = list.find(x => x.id === me.id); u.salt = hex(16); u.hash = await hashPw(d.newPassword, u.salt); u.mustChange = false;
         set(K.users, list); return { ok: true };
       }
-      case 'catalog': return { ok: false, error: 'Mode lokal: katalog dibaca langsung dari Google Sheets.', code: 'LOCAL' };
     }
+
+    if (action.startsWith('forum.') || action.startsWith('loan.')) return LocalExtra.handle(action, me, d, list, accessMap());
 
     if (action.startsWith('admin.')) {
       if (me.role !== 'admin') return { ok: false, error: 'Hanya admin yang boleh melakukan ini.' };

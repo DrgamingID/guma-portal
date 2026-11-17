@@ -53,15 +53,9 @@ const Gumateri = (() => {
     if (loaded && !force) return Promise.resolve();
     if (loading) return loading;
     const fromAppsScript = HAS_APPS_SCRIPT() && typeof google.script.run.getKatalogData === 'function';
-    let source;
-    if (typeof Auth !== 'undefined' && Auth.REMOTE) {
-      // Mode backend: katalog diambil lewat server yang mengecek hak akses (sheet katalog boleh dibuat privat)
-      source = Auth.fetchCatalog().then(r => { if (!r.ok) throw new Error(r.error || 'Gagal memuat katalog'); return r; });
-    } else if (fromAppsScript) {
-      source = new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej).getKatalogData());
-    } else {
-      source = fetchSheet();
-    }
+    const source = fromAppsScript
+      ? new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej).getKatalogData())
+      : fetchSheet();
     loading = source.then(cat => {
       all = cat.data || []; semesters = cat.semesters || []; courses = cat.courses || []; loaded = true;
       listeners.forEach(fn => fn({ files: all.length, courses: courses.length }));
@@ -249,17 +243,34 @@ const Gumateri = (() => {
 
   function toast(msg, kind) { if (window.App) App.toast(msg, kind); else alert(msg); }
 
+  // Deep Search & Sinkronisasi berjalan di Apps Script (butuh akses Drive).
+  // Dibuka dari Apps Script -> google.script.run; dibuka dari hosting biasa -> fetch ke APPS_SCRIPT_URL.
+  // Di mode prototipe (tanpa database) token tidak bisa diverifikasi Apps Script, jadi tidak dipakai.
+  const SCRIPT_AVAILABLE = () => HAS_APPS_SCRIPT() || (Auth.REMOTE && Auth.SCRIPT_READY);
+  function runScript(action, data, fnName, fnArg) {
+    if (HAS_APPS_SCRIPT()) {
+      return new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fnName](fnArg));
+    }
+    return Auth.callScript(action, data);
+  }
+
+  let deepBusy = false;
   function deepSearch(keyword) {
-    if (!HAS_APPS_SCRIPT()) { toast('Deep Search hanya tersedia saat web dijalankan lewat Google Apps Script. Memakai pencarian biasa.', 'warn'); applyFilters(); return; }
+    if (!SCRIPT_AVAILABLE()) {
+      toast('Mode prototipe: Deep Search isi PDF butuh backend (Supabase + Apps Script). Sementara memakai pencarian judul, mata kuliah, dan semester.', 'warn');
+      applyFilters(); return;
+    }
+    if (deepBusy) return;
+    deepBusy = true;
     showLoading(true, 'Memindai Isi Dokumen PDF...', 'Mencari kata "' + keyword + '" di dalam lembar PDF Google Drive...');
-    google.script.run
-      .withSuccessHandler(r => {
+    runScript('deepSearch', { keyword }, 'searchFullText', keyword)
+      .then(r => {
         showLoading(false);
         if (r && r.success) { displayed = r.results || []; render(displayed, true); }
         else { toast((r && (r.message || r.error)) || 'Pencarian tidak membuahkan hasil.', 'warn'); applyFilters(); }
       })
-      .withFailureHandler(e => { showLoading(false); toast('Pencarian isi gagal: ' + e, 'err'); applyFilters(); })
-      .searchFullText(keyword);
+      .catch(e => { showLoading(false); toast('Pencarian isi gagal: ' + e, 'err'); applyFilters(); })
+      .finally(() => { deepBusy = false; });
   }
 
   function runSearch() {
@@ -283,14 +294,13 @@ const Gumateri = (() => {
     if (!isAdmin) return; // pengaman sisi tampilan; PIN tetap divalidasi di backend
     const pin = $('gtPin').value.trim(); if (!pin) return;
     $('gtPinModal').classList.remove('show');
-    if (!HAS_APPS_SCRIPT()) { toast('Sinkronisasi Drive hanya tersedia saat web dijalankan lewat Google Apps Script.', 'warn'); return; }
+    if (!SCRIPT_AVAILABLE()) { toast('Mode prototipe: Sinkronisasi Drive butuh backend Apps Script.', 'warn'); return; }
     const btn = $('gtSyncBtn'); btn.disabled = true; $('gtSyncText').textContent = 'Memindai...';
     showLoading(true, 'Mengindeks Folder Google Drive...', 'Menelusuri struktur Gumateri. Memerlukan waktu 2–3 menit...');
     const done = () => { btn.disabled = false; $('gtSyncText').textContent = 'Sinkronkan Drive'; };
-    google.script.run
-      .withSuccessHandler(r => { done(); if (r && r.success) { toast(r.message, 'ok'); loaded = false; init(true); } else { showLoading(false); toast((r && r.error) || 'Gagal sinkronisasi.', 'err'); applyFilters(); } })
-      .withFailureHandler(e => { done(); showLoading(false); toast('Gagal sinkronisasi: ' + e, 'err'); applyFilters(); })
-      .syncFolderWithAuth(pin);
+    runScript('sync', { pin }, 'syncFolderWithAuth', pin)
+      .then(r => { done(); if (r && r.success) { toast(r.message, 'ok'); loaded = false; init(true); } else { showLoading(false); toast((r && r.error) || 'Gagal sinkronisasi.', 'err'); applyFilters(); } })
+      .catch(e => { done(); showLoading(false); toast('Gagal sinkronisasi: ' + e, 'err'); applyFilters(); });
   }
 
   function init(force) {

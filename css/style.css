@@ -309,3 +309,56 @@ footer.site-foot { position: relative; z-index: 2; text-align: center; color: va
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Forum ---------- */
+.chat-panel { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.chat-box { height: min(60vh, 560px); overflow-y: auto; padding: 1.1rem; display: flex; flex-direction: column; gap: .8rem; }
+.chat-empty { margin: auto; color: var(--text-mute); font-size: .9rem; text-align: center; }
+.chat-msg { display: flex; gap: .7rem; max-width: 760px; }
+.chat-msg .avatar { flex: none; }
+.chat-bubble { background: var(--glass); border: 1px solid var(--line); border-radius: var(--radius-md); padding: .55rem .85rem; min-width: 0; }
+.chat-msg.mine .chat-bubble { background: rgba(124,58,237,.16); border-color: var(--line-strong); }
+.chat-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; font-size: .78rem; margin-bottom: .15rem; }
+.chat-time { color: var(--text-mute); font-size: .72rem; }
+.chat-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9rem; }
+.chat-del { margin-left: auto; background: none; border: none; color: var(--text-mute); cursor: pointer; font-size: .75rem; padding: 0 .25rem; }
+.chat-del:hover { color: var(--danger); }
+.chat-form { display: flex; gap: .6rem; padding: .8rem; border-top: 1px solid var(--line); align-items: flex-end; }
+.chat-form textarea { resize: none; flex: 1; max-height: 140px; }
+
+/* ---------- Peminjaman ---------- */
+.pj-card.busy { border-color: rgba(251,113,133,.45); }
+.pj-card.free { border-color: rgba(52,211,153,.3); }
+.pj-state { font-size: .72rem; font-weight: 800; }
+.pj-state.busy { color: var(--danger); }
+.pj-state.free { color: var(--ok); }
+.pj-who { margin-top: .6rem; font-size: .95rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.pj-note { color: var(--text-dim); font-size: .8rem; margin-top: .2rem; }
+.pj-next { margin-top: .6rem; font-size: .8rem; color: var(--text-dim); border-top: 1px dashed var(--line); padding-top: .5rem; }
+
+/* ---------- Kalender peminjaman ---------- */
+.pj-c0 { --pc: #a78bfa; } .pj-c1 { --pc: #60a5fa; } .pj-c2 { --pc: #34d399; }
+.pj-c3 { --pc: #fbbf24; } .pj-c4 { --pc: #fb7185; } .pj-c5 { --pc: #22d3ee; }
+.cal-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem; }
+.cal-head h3 { flex: 1; text-align: center; font-size: 1.1rem; font-weight: 800; text-transform: capitalize; }
+.cal-legend { display: flex; flex-wrap: wrap; gap: .4rem 1rem; margin-bottom: .8rem; font-size: .78rem; color: var(--text-dim); }
+.cal-key i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--pc); margin-right: .35rem; }
+.cal-wrap { border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; background: var(--glass); backdrop-filter: blur(10px); }
+.cal-dow, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-dow div { padding: .55rem 0; text-align: center; font-size: .7rem; font-weight: 800; color: var(--text-mute); text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid var(--line); }
+.cal-cell { min-height: 104px; padding: .35rem; border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: transparent; color: var(--text); text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 3px; min-width: 0; transition: background .15s; }
+.cal-cell:nth-child(7n) { border-right: 0; }
+.cal-cell:hover { background: var(--glass-2); }
+.cal-cell.out { opacity: .42; }
+.cal-cell.sel { box-shadow: inset 0 0 0 2px var(--primary-500); background: rgba(124,58,237,.12); }
+.cal-num { font-size: .78rem; font-weight: 700; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+.cal-cell.today .cal-num { background: linear-gradient(135deg, var(--primary-600), var(--primary-800)); color: #fff; box-shadow: var(--glow); }
+.pj-chip { font-size: .68rem; font-weight: 600; line-height: 1.25; padding: 2px 6px; border-radius: 5px; background: color-mix(in srgb, var(--pc) 22%, transparent); border-left: 3px solid var(--pc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pj-chip.done { opacity: .5; }
+.pj-more { font-size: .66rem; color: var(--text-mute); padding-left: 4px; }
+.cal-item { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; padding: .7rem .9rem; border: 1px solid var(--line); border-left: 4px solid var(--pc); border-radius: var(--radius-md); margin-bottom: .55rem; background: var(--glass); }
+@media (max-width: 700px) {
+  .cal-cell { min-height: 64px; padding: .25rem; }
+  .pj-chip { font-size: 0; height: 6px; padding: 0; border-left-width: 0; background: var(--pc); }
+  .pj-more { font-size: .6rem; }
+}

@@ -6,8 +6,10 @@ const FEATURES = [
     desc: 'Katalog modul, diktat, catatan, dan arsip UTS/UAS Matematika IPB.' },
   { id: 'agenda', title: 'Agenda & Kegiatan', icon: 'calendar', status: 'soon', defaults: ['mahasiswa', 'civimat'],
     desc: 'Kalender kegiatan, kepanitiaan, dan pengumuman prodi.' },
-  { id: 'forum', title: 'Forum Diskusi', icon: 'chat', status: 'soon', defaults: ['civimat'],
-    desc: 'Ruang tanya jawab dan diskusi khusus CiviMat.' },
+  { id: 'forum', title: 'Forum Diskusi', icon: 'chat', status: 'live', defaults: ['mahasiswa', 'civimat'],
+    desc: 'Ruang obrolan civitas. Ruang General terbuka untuk semua tingkatan.' },
+  { id: 'peminjaman', title: 'Peminjaman', icon: 'tool', status: 'live', defaults: ['mahasiswa', 'civimat'],
+    desc: 'Pantau ruangan dan alat yang sedang dipakai Birdept atau perorangan.' },
   { id: 'ruangguma', title: 'Ruang Member Guma', icon: 'shield', status: 'soon', defaults: [],
     desc: 'Area internal untuk Member Guma.' }
 ];
@@ -21,6 +23,7 @@ const ICONS = {
   shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
   admin: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  tool: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
   lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'
 };
 const icon = (n, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${extra}>${ICONS[n] || ''}</svg>`;
@@ -155,7 +158,8 @@ const App = (() => {
 
     view.innerHTML = `<div class="view">${mustChangeBanner()}${html}</div>`;
     window.scrollTo({ top: 0 });
-    if (feature && feature.id === 'gumateri' && Auth.canAccess(user, 'gumateri', DEFAULTS)) Gumateri.mount($('featureHost'), user);
+    const MODULES = { gumateri: Gumateri, forum: Forum, peminjaman: Peminjaman };
+    if (feature && MODULES[feature.id] && feature.status === 'live' && Auth.canAccess(user, feature.id, DEFAULTS)) MODULES[feature.id].mount($('featureHost'), user);
     if (id === 'home') afterHome();
     if (id === 'admin' && user.role === 'admin') afterAdmin();
   }
@@ -234,8 +238,8 @@ const App = (() => {
       <td style="text-align:center"><input type="checkbox" class="matrix-check" checked disabled></td><td style="text-align:center"><input type="checkbox" class="matrix-check" checked disabled></td></tr>`).join('');
     return `<div class="page-head"><h2>Panel Admin</h2><p>Kelola akun pengguna dan hak akses tiap fitur.</p></div>
       ${Auth.REMOTE
-        ? '<div class="notice" style="background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.35);color:#a7f3d0"><span>✅</span><span>Terhubung ke <strong>backend Apps Script</strong>. Akun dan hak akses tersimpan di server.</span></div>'
-        : '<div class="notice"><span>⚠️</span><span>Mode <strong>lokal/demo</strong>: akun hanya tersimpan di browser ini dan tidak aman. Isi <code>API_URL</code> di <code>js/config.js</code> untuk memakai backend.</span></div>'}
+        ? '<div class="notice" style="background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.35);color:#a7f3d0"><span>✅</span><span>Terhubung ke <strong>database Supabase</strong>. Akun dan hak akses tersimpan di server.</span></div>'
+        : '<div class="notice"><span>⚠️</span><span>Mode <strong>lokal/demo</strong>: akun hanya tersimpan di browser ini dan tidak aman. Isi <code>SUPABASE_URL</code> dan <code>SUPABASE_ANON_KEY</code> di <code>js/config.js</code> untuk memakai database.</span></div>'}
       <div class="panel"><h3>Hak Akses Fitur</h3><p class="hint">Centang untuk memberi akses. Admin dan Member Guma selalu punya akses penuh.</p>
         <div class="table-wrap"><table class="data"><thead><tr><th>Fitur</th><th style="text-align:center">Mahasiswa</th><th style="text-align:center">CiviMat</th><th style="text-align:center">Member Guma</th><th style="text-align:center">Admin</th></tr></thead><tbody>${rows}</tbody></table></div></div>
       <div class="panel"><h3>Manajemen Akun</h3><p class="hint">Ubah tingkatan, nonaktifkan, reset kata sandi, atau hapus akun.</p>
@@ -375,7 +379,7 @@ const App = (() => {
     $('bootMsg').classList.add('hidden');
     u ? enterApp(u) : showAuth('login');
   }
-  return { boot, toast };
+  return { boot, toast, openModal, closeModal };
 })();
 
 window.App = App;
